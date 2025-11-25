@@ -13,6 +13,8 @@ export default defineConfig(({ mode }) => {
       // By default, Vite doesn't expose process.env. This shim allows
       // process.env.API_KEY to work as used in the existing code.
       'process.env.API_KEY': JSON.stringify(env.API_KEY),
+      // Expose the Base URL for API Proxy (useful for regions like China)
+      'process.env.GEMINI_API_BASE_URL': JSON.stringify(env.GEMINI_API_BASE_URL),
     },
     server: {
       port: 3000,

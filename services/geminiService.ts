@@ -50,11 +50,16 @@ const analysisSchema: Schema = {
 
 export const analyzeText = async (text: string): Promise<AnalysisResult> => {
   const apiKey = process.env.API_KEY;
+
   if (!apiKey) {
     throw new Error("API Key is missing");
   }
 
-  const ai = new GoogleGenAI({ apiKey });
+  // Initialize with API Key
+  // Note: baseUrl is not supported in the current @google/genai types
+  const ai = new GoogleGenAI({ 
+    apiKey,
+  });
 
   try {
     const response = await ai.models.generateContent({

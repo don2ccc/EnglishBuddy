@@ -3,26 +3,35 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>English Buddy - 小小英语助手</title>
+    <title>English Buddy - 英语好伙伴</title>
     
-    <!-- Tailwind via CDN for simplicity in this specific project setup. 
-         For a larger production app, consider moving to PostCSS/npm installation. -->
+    <!-- Tailwind via CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Zcool+KuaiLe&display=swap" rel="stylesheet">
+    <!-- Fonts: Nunito (Standard), Zcool KuaiLe (Fun/Candy), Inter (Clean) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Nunito:wght@400;600;700;800&family=Zcool+KuaiLe&display=swap" rel="stylesheet">
+    
     <script>
       tailwind.config = {
+        darkMode: 'class',
         theme: {
           extend: {
             fontFamily: {
               sans: ['Nunito', 'sans-serif'],
-              display: ['"Zcool KuaiLe"', 'cursive'], // Fun font for headers if available, fallback to cursive
+              fun: ['"Zcool KuaiLe"', 'cursive'],
             },
             colors: {
-              'brand-blue': '#8EC5FC',
-              'brand-purple': '#E0C3FC',
-              'brand-yellow': '#F9F871',
-              'brand-pink': '#FF9A9E',
+              // Dynamic Theme Colors mapped to CSS Variables
+              primary: 'var(--color-primary)',
+              'primary-hover': 'var(--color-primary-hover)',
+              secondary: 'var(--color-secondary)',
+              accent: 'var(--color-accent)',
+              background: 'var(--color-bg)',
+              surface: 'var(--color-surface)',
+              text: {
+                main: 'var(--color-text-main)',
+                muted: 'var(--color-text-muted)',
+              }
             }
           }
         }
@@ -31,6 +40,16 @@
     <style>
       body {
         font-family: 'Nunito', sans-serif;
+        background-color: var(--color-bg);
+        color: var(--color-text-main);
+        transition: background-color 0.3s ease, color 0.3s ease;
+      }
+      
+      /* Smooth transitions for theme changes */
+      *, *::before, *::after {
+        transition-property: background-color, border-color, color, fill, stroke;
+        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+        transition-duration: 300ms;
       }
     </style>
   <script type="importmap">

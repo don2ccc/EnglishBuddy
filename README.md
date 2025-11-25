@@ -47,14 +47,30 @@ npm install
 
 ### 3. 配置环境变量 (Configuration)
 
-在项目根目录下创建一个 `.env` 文件，并填入您的 API Key：
+在项目根目录下创建一个 `.env` 文件。
 
+**标准配置 (Standard):**
 ```env
-# .env
 API_KEY=your_google_gemini_api_key_here
 ```
 
 > **注意**: 请勿将包含真实 Key 的 `.env` 文件提交到 GitHub。
+
+### 🇨🇳 中国地区使用指南 (Usage in China)
+
+由于网络环境原因，在中国大陆直接访问 Google API 可能会失败。您需要配置 **代理地址 (Base URL)**。
+
+1.  您需要找到一个 Gemini API 的转发服务（市面上有很多第三方提供的 API 代理，或者自建 Cloudflare Worker）。
+2.  在 `.env` 文件中增加 `GEMINI_API_BASE_URL` 配置：
+
+```env
+# .env
+API_KEY=your_google_gemini_api_key_here
+# 示例代理地址 (请替换为您实际使用的代理服务地址)
+GEMINI_API_BASE_URL=https://your-proxy-domain.com
+```
+
+配置完成后，App 将会自动通过该代理地址发送请求。
 
 ### 4. 启动开发服务器 (Running Locally)
 
@@ -81,7 +97,7 @@ english-buddy/
 │   ├── InputArea.tsx    # 输入框组件
 │   └── AnalysisResults.tsx # 分析结果显示及导出逻辑
 ├── services/
-│   └── geminiService.ts # Gemini API 调用逻辑
+│   └── geminiService.ts # Gemini API 调用逻辑 (包含代理支持)
 ├── types.ts             # TypeScript 类型定义
 ├── App.tsx              # 主应用入口
 ├── index.tsx            # React 渲染入口

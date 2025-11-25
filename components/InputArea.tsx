@@ -17,36 +17,36 @@ const InputArea: React.FC<InputAreaProps> = ({ onAnalyze, isLoading }) => {
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto bg-white rounded-3xl shadow-xl border-4 border-indigo-50 p-2">
-      <form onSubmit={handleSubmit} className="relative group">
+    <div className="w-full mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden transition-shadow hover:shadow-md">
+      <form onSubmit={handleSubmit} className="relative">
         <textarea
-          className="w-full h-40 p-6 rounded-2xl text-lg text-slate-700 placeholder-slate-400 bg-indigo-50/30 focus:bg-white focus:ring-4 focus:ring-indigo-100 transition-all outline-none resize-none"
-          placeholder="在这里输入你想学习的英语句子... (Try typing: The quick brown fox jumps over the lazy dog.)"
+          className="w-full h-40 p-6 text-lg text-slate-800 placeholder-slate-400 focus:bg-slate-50 transition-colors outline-none resize-none font-serif leading-relaxed"
+          placeholder="Enter English text here for deep structural analysis..."
           value={text}
           onChange={(e) => setText(e.target.value)}
           disabled={isLoading}
         />
         
-        <div className="absolute bottom-4 right-4">
+        <div className="px-4 py-3 bg-slate-50 border-t border-slate-100 flex justify-end">
           <button
             type="submit"
             disabled={!text.trim() || isLoading}
             className={`
-              flex items-center space-x-2 px-6 py-3 rounded-full font-bold text-white shadow-md transition-all transform
+              flex items-center space-x-2 px-5 py-2 rounded-full text-sm font-medium transition-all
               ${!text.trim() || isLoading 
-                ? 'bg-slate-300 cursor-not-allowed' 
-                : 'bg-gradient-to-r from-indigo-500 to-purple-500 hover:scale-105 hover:shadow-xl active:scale-95'}
+                ? 'bg-slate-200 text-slate-400 cursor-not-allowed' 
+                : 'bg-blue-600 text-white hover:bg-blue-700 shadow-md hover:shadow-lg'}
             `}
           >
             {isLoading ? (
               <>
-                <Sparkles className="w-5 h-5 animate-spin" />
-                <span>思考中...</span>
+                <Sparkles className="w-4 h-4 animate-spin" />
+                <span>Processing...</span>
               </>
             ) : (
               <>
-                <Send className="w-5 h-5" />
-                <span>开始分析</span>
+                <Send className="w-4 h-4" />
+                <span>Analyze</span>
               </>
             )}
           </button>

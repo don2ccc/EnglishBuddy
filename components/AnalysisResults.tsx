@@ -1,17 +1,83 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { AnalysisResult } from '../types';
-import { Languages, GraduationCap, MessageCircle, Award, FileText, FileDown, Loader2, Quote } from 'lucide-react';
+import { Languages, GraduationCap, MessageCircle, Award, FileText, FileDown, Loader2, Quote, BookmarkPlus, Sparkles } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 
 interface AnalysisResultsProps {
   data: AnalysisResult;
   originalText: string;
+  onSaveWord: (text: string) => Promise<void>;
 }
 
-const AnalysisResults: React.FC<AnalysisResultsProps> = ({ data, originalText }) => {
+interface SelectionPopup {
+  text: string;
+  x: number;
+  y: number;
+}
+
+const AnalysisResults: React.FC<AnalysisResultsProps> = ({ data, originalText, onSaveWord }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [selection, setSelection] = useState<SelectionPopup | null>(null);
+  const [isSavingSelection, setIsSavingSelection] = useState(false);
+  const [savedPhrases, setSavedPhrases] = useState<Set<number>>(new Set());
+
+  // Handle Text Selection
+  useEffect(() => {
+    const handleSelection = () => {
+      // Don't process selection if we are interacting with the popup itself
+      if (isSavingSelection) return;
+
+      const selectedText = window.getSelection()?.toString().trim();
+      
+      if (selectedText && selectedText.length > 0 && selectedText.length < 50) {
+        const selectionRange = window.getSelection()?.getRangeAt(0);
+        
+        if (selectionRange && containerRef.current) {
+          const rect = selectionRange.getBoundingClientRect();
+          const containerRect = containerRef.current.getBoundingClientRect();
+
+          // Calculate position relative to the container
+          // Both rects are viewport-relative, so subtracting them cancels out scroll and gets relative offset
+          const x = rect.left + (rect.width / 2) - containerRect.left;
+          const y = rect.top - containerRect.top - 8; // 8px buffer above text
+          
+          setSelection({ text: selectedText, x, y });
+        }
+      } else {
+        setSelection(null);
+      }
+    };
+
+    // Use mouseup to detect end of selection
+    document.addEventListener('mouseup', handleSelection);
+    // Also listen to keyup for keyboard selection
+    document.addEventListener('keyup', handleSelection);
+    
+    return () => {
+      document.removeEventListener('mouseup', handleSelection);
+      document.removeEventListener('keyup', handleSelection);
+    };
+  }, [isSavingSelection]);
+
+  const handleSelectionSave = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent deselecting immediately
+    if (!selection) return;
+
+    setIsSavingSelection(true);
+    await onSaveWord(selection.text);
+    setIsSavingSelection(false);
+    setSelection(null);
+    window.getSelection()?.removeAllRanges(); // Clear selection
+    // Optional: remove alert to be less intrusive, relies on the toast in App.tsx
+  };
+
+  const handlePhraseSave = async (text: string, index: number) => {
+    setSavedPhrases(prev => new Set(prev).add(index));
+    await onSaveWord(text);
+  };
 
   const handleDownloadTxt = () => {
     const { chineseTranslation, difficultyLevel, encouragement, grammarAnalysis, keyPhrases } = data;
@@ -53,8 +119,8 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ data, originalText })
     try {
       setIsGeneratingPdf(true);
       const canvas = await html2canvas(contentRef.current, {
-        scale: 2, // Higher scale for better resolution
-        backgroundColor: '#ffffff', // Force white background for the PDF
+        scale: 2, 
+        backgroundColor: '#ffffff',
         logging: false,
         useCORS: true
       });
@@ -81,8 +147,30 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ data, originalText })
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto mt-6 pb-20">
+    <div ref={containerRef} className="w-full max-w-5xl mx-auto mt-6 pb-20 relative">
       
+      {/* Selection Popup Tooltip */}
+      {selection && (
+        <div 
+            className="absolute z-50 transform -translate-x-1/2 -translate-y-full"
+            style={{ left: selection.x, top: selection.y }}
+        >
+            <button
+                onClick={handleSelectionSave}
+                disabled={isSavingSelection}
+                className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-full shadow-xl hover:bg-slate-800 transition-all text-sm font-medium animate-fade-in-up"
+            >
+                {isSavingSelection ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                    <BookmarkPlus className="w-4 h-4 text-blue-300" />
+                )}
+                <span>Save "{selection.text.length > 15 ? selection.text.substring(0,12) + '...' : selection.text}"</span>
+            </button>
+            <div className="w-3 h-3 bg-slate-900 rotate-45 absolute left-1/2 -bottom-1 -translate-x-1/2 -z-10"></div>
+        </div>
+      )}
+
       {/* Action Buttons */}
       <div className="flex justify-end space-x-3 mb-4 px-4 md:px-0">
         <button 
@@ -133,7 +221,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ data, originalText })
               <span className="font-bold">英语原文</span>
             </div>
           </div>
-          <p className="mt-4 text-2xl font-serif font-medium text-slate-800 leading-relaxed italic">
+          <p className="mt-4 text-2xl font-serif font-medium text-slate-800 leading-relaxed italic selection:bg-blue-100 selection:text-blue-900">
             "{originalText}"
           </p>
         </div>
@@ -146,7 +234,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ data, originalText })
               <span className="font-bold">中文翻译</span>
             </div>
           </div>
-          <p className="mt-4 text-2xl font-bold text-slate-700 leading-relaxed">
+          <p className="mt-4 text-2xl font-bold text-slate-700 leading-relaxed selection:bg-blue-100 selection:text-blue-900">
             {data.chineseTranslation}
           </p>
         </div>
@@ -163,7 +251,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ data, originalText })
             
             <div className="mt-4 space-y-6">
               {data.grammarAnalysis.map((item, idx) => (
-                <div key={idx} className="p-4 rounded-2xl bg-purple-50">
+                <div key={idx} className="p-4 rounded-2xl bg-purple-50 selection:bg-purple-200">
                   <div className="flex items-center space-x-2 mb-2">
                     <span className="w-6 h-6 flex items-center justify-center bg-purple-200 text-purple-700 rounded-full text-xs font-black">
                       {idx + 1}
@@ -193,13 +281,21 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ data, originalText })
 
             <div className="mt-4 space-y-4">
               {data.keyPhrases.map((item, idx) => (
-                <div key={idx} className="flex items-start space-x-4 p-4 rounded-2xl bg-emerald-50">
+                <div key={idx} className="flex items-start space-x-4 p-4 rounded-2xl bg-emerald-50 group hover:bg-emerald-100 transition-colors relative selection:bg-emerald-200">
                   <div className="flex-shrink-0 w-2 h-2 mt-2 rounded-full bg-emerald-400"></div>
-                  <div>
+                  <div className="flex-1">
                     <h4 className="font-black text-emerald-800 text-lg">{item.original}</h4>
                     <p className="text-emerald-600 font-bold text-sm mb-1">{item.translation}</p>
                     <p className="text-slate-600 text-sm leading-snug">{item.explanation}</p>
                   </div>
+                  <button 
+                    onClick={() => handlePhraseSave(item.original, idx)}
+                    disabled={savedPhrases.has(idx)}
+                    className={`p-2 rounded-full transition-all ${savedPhrases.has(idx) ? 'bg-emerald-200 text-emerald-700' : 'bg-white text-slate-400 hover:text-blue-500 hover:bg-blue-50 shadow-sm opacity-0 group-hover:opacity-100'}`}
+                    title="Save to Notebook"
+                  >
+                    <BookmarkPlus className="w-5 h-5" />
+                  </button>
                 </div>
               ))}
                {data.keyPhrases.length === 0 && (

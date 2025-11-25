@@ -1,5 +1,7 @@
 {
   "name": "English Buddy - Kids Learning Assistant",
   "description": "A friendly, design-focused web app helping children analyze English text, understand grammar, and learn phrases with simple Chinese explanations.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [
+    "camera"
+  ]
 }
